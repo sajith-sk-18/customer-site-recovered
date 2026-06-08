@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root { height: 100%; }
+body { @apply bg-gray-50 text-gray-900 antialiased; }
+
+.btn {
+  @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition;
+}
+.btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700; }
+.btn-secondary { @apply btn bg-white border border-gray-300 text-gray-700 hover:bg-gray-50; }
+.input {
+  @apply w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm
+         focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500;
+}
+.card { @apply bg-white rounded-lg shadow-sm border border-gray-200; }
+
+/* ---------- Animations ---------- */
+@keyframes fade-up {
+  0%   { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in {
+  0% { opacity: 0; } 100% { opacity: 1; }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(-3deg); }
+  50%      { transform: translateY(-18px) rotate(3deg); }
+}
+@keyframes blob {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%      { transform: translate(30px, -40px) scale(1.1); }
+  66%      { transform: translate(-25px, 25px) scale(0.95); }
+}
+@keyframes gradient-x {
+  0%, 100% { background-position: 0% 50%; }
+  50%      { background-position: 100% 50%; }
+}
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes marquee {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-fade-up     { animation: fade-up 0.7s ease-out both; }
+.animate-fade-in     { animation: fade-in 0.8s ease-out both; }
+.animate-float       { animation: float 6s ease-in-out infinite; }
+.animate-blob        { animation: blob 12s ease-in-out infinite; }
+.animate-gradient-x  { background-size: 200% 200%; animation: gradient-x 12s ease infinite; }
+.animate-marquee     { animation: marquee 30s linear infinite; }
+
+.delay-100 { animation-delay: .1s; }
+.delay-200 { animation-delay: .2s; }
+.delay-300 { animation-delay: .3s; }
+.delay-400 { animation-delay: .4s; }
+.delay-500 { animation-delay: .5s; }
+.delay-700 { animation-delay: .7s; }
+
+.shimmer {
+  background: linear-gradient(90deg, #f3f4f6 0px, #e5e7eb 200px, #f3f4f6 400px);
+  background-size: 800px 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+.hover-lift {
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px -10px rgba(37, 99, 235, .25);
+}
+
+/* ---------- 3D tilt cards ---------- */
+.tilt3d-wrap {
+  perspective: 1100px;
+  height: 100%;
+}
+.tilt3d-inner {
+  position: relative;
+  height: 100%;
+  border-radius: 1rem;
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(var(--ts, 1));
+  transform-style: preserve-3d;
+  transition: transform .18s ease-out;
+  will-change: transform;
+}
+.tilt3d-wrap:hover .tilt3d-inner { --ts: 1.03; }
+/* soft "lifted off the page" shadow that deepens on hover (cards only) */
+.tilt3d-card > :first-child {
+  box-shadow: 0 6px 16px -8px rgba(16, 166, 72, .18);
+}
+.tilt3d-wrap:hover .tilt3d-card > :first-child {
+  box-shadow: 0 24px 45px -18px rgba(16, 166, 72, .45);
+}
+/* moving light glare following the pointer */
+.tilt3d-glare {
+  position: absolute;
+  inset: 0;
+  border-radius: 1rem;
+  pointer-events: none;
+  z-index: 20;
+  opacity: 0;
+  transition: opacity .25s ease;
+  mix-blend-mode: overlay;
+  background: radial-gradient(60% 60% at var(--gx, 50%) var(--gy, 50%),
+              rgba(255, 255, 255, .55), rgba(255, 255, 255, 0) 60%);
+}
+.tilt3d-wrap:hover .tilt3d-glare { opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tilt3d-inner { transform: none !important; transition: none; }
+  .tilt3d-glare { display: none; }
+}
+
+.footer-link {
+  @apply inline-flex items-center text-sm text-gray-400 hover:text-white transition relative;
+}
+.footer-link::before {
+  content: '';
+  @apply absolute -left-3 top-1/2 w-0 h-0.5 bg-gradient-to-r from-brand-400 to-brand-600 rounded-full transition-all duration-300;
+  transform: translateY(-50%);
+}
+.footer-link:hover::before {
+  @apply w-2;
+}
