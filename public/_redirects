@@ -1,0 +1,9 @@
+# Cloudflare Pages routing (this file replaces .htaccess — Pages ignores Apache config).
+# Copied verbatim into dist/ by Vite. FIRST MATCH WINS, so /admin must come first.
+
+# Admin panel (built into dist/admin/ by the Pages build command) — its own SPA fallback.
+/admin/*  /admin/index.html  200
+
+# Storefront SPA fallback. Real files (assets, prerendered products/<id>/index.html,
+# sitemap.xml, robots.txt) are served before these rules apply.
+/*        /index.html        200

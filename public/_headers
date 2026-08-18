@@ -1,0 +1,14 @@
+# Cloudflare Pages response headers (replaces the <IfModule mod_headers.c> blocks
+# in .htaccess, which Pages ignores). Copied into dist/ by Vite.
+
+# The admin panel must never be indexed. On a shared domain only the ROOT robots.txt
+# is read, so this header — plus "Disallow: /admin/" in robots.txt — is what protects it.
+/admin/*
+  X-Robots-Tag: noindex, nofollow, noarchive
+
+# Caching is deliberately NOT set here. Pages already serves fingerprinted assets with a
+# long immutable cache and revalidates HTML on every request. Adding a Cache-Control rule
+# on /* would override the per-asset rules (later matches win for the same header name).
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin

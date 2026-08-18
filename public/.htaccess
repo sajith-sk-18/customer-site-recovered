@@ -1,0 +1,43 @@
+# Fluro Tech storefront — Apache config for Hostinger (static SPA + prerendered pages).
+# This file ships in dist/ on build; upload the whole dist/ to public_html.
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Force HTTPS — uncomment if Hostinger's "Force HTTPS" toggle isn't already on.
+  # RewriteCond %{HTTPS} off
+  # RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Serve real files & directories as-is: assets, prerendered products/<id>/index.html,
+  # sitemap.xml, robots.txt, etc.
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # The admin panel lives at /admin/ and (if single-origin) Laravel at /api/.
+  # Without these, /admin/<deep-route> is not a real file and would fall through
+  # to the storefront's index.html below, loading the WRONG app.
+  RewriteRule ^admin(/|$) - [L]
+  RewriteRule ^api(/|$) - [L]
+
+  # SPA fallback: any other route -> index.html (client router takes over).
+  RewriteRule ^ index.html [L]
+</IfModule>
+
+# Gzip compression
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/plain text/xml \
+    application/javascript application/json image/svg+xml application/xml application/rss+xml
+</IfModule>
+
+# Caching: fingerprinted assets cached forever; HTML always revalidated so new
+# deploys (and updated prerendered SEO) are picked up immediately.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(js|css|woff2?|ttf|eot|png|jpe?g|gif|svg|webp|ico|avif)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  <FilesMatch "\.(html|xml|txt)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
