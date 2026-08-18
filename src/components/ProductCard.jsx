@@ -3,8 +3,12 @@ import RatingStars from './RatingStars';
 import WishlistButton from './WishlistButton';
 import Tilt3D from './Tilt3D';
 import { inr } from '../lib/money';
+import { brandLogo } from '../lib/brands';
+import { useEnquiry } from '../Enquiry';
 
 export default function ProductCard({ product }) {
+  const enquiry = useEnquiry();
+  const openEnquiry = (e) => { e.preventDefault(); e.stopPropagation(); enquiry.open(product); };
   const primary  = product.images?.[0]?.url;
   const rating   = product.approved_reviews_avg_rating ?? 0;
   const count    = product.approved_reviews_count ?? 0;
@@ -94,18 +98,34 @@ export default function ProductCard({ product }) {
         {/* quick-action bar */}
         <div className="absolute inset-x-3 bottom-3 z-10 flex gap-2 translate-y-3 opacity-0
                         group-hover:translate-y-0 group-hover:opacity-100 transition duration-300">
-          <span className="flex-1 text-center py-2 rounded-lg bg-brand-600 text-white text-xs font-semibold
-                           shadow-lg hover:bg-brand-700">
+          <span className="flex-1 text-center py-2 rounded-lg bg-white/90 text-gray-800 text-xs font-semibold
+                           shadow-lg hover:bg-white border border-gray-200">
             View details
           </span>
+          <button
+            type="button"
+            onClick={openEnquiry}
+            className="flex-1 text-center py-2 rounded-lg bg-brand-600 text-white text-xs font-semibold
+                       shadow-lg hover:bg-brand-700"
+          >
+            Enquiry Now
+          </button>
         </div>
       </div>
 
       {/* body */}
       <div className="relative p-4">
         <div className="flex items-center justify-between">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-brand-600">
-            {product.brand || '—'}
+          <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-brand-600">
+            {brandLogo(product.brand) && (
+              <img
+                src={brandLogo(product.brand)}
+                alt=""
+                className="h-3.5 max-w-[52px] object-contain opacity-70"
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            )}
+            <span>{product.brand || '—'}</span>
           </div>
           <div className="flex items-center gap-1">
             <RatingStars value={rating} />

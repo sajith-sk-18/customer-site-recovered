@@ -1,12 +1,11 @@
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
 import api from '../api';
 import { useAuth } from '../hooks/useAuth';
+import Seo from '../components/Seo';
 
 export default function Contact() {
-  const location = useLocation();
   const { authed, user } = useAuth();
-  const [form, setForm] = useState({ phone: '', message: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
 
@@ -17,7 +16,7 @@ export default function Contact() {
     try {
       const r = await api.post('/enquiries', form);
       setMsg({ type: 'ok', text: r.data.message || "Thanks — we'll be in touch within 24 hours." });
-      setForm({ phone: '', message: '' });
+      setForm({ name: '', email: '', phone: '', message: '' });
     } catch (err) {
       const status = err?.response?.status;
       if (status === 401) {
@@ -34,6 +33,7 @@ export default function Contact() {
 
   return (
     <>
+      <Seo title="Contact us" description="Get in touch with Fluro Tech for laptop enquiries, custom builds and bulk orders. Call, email, or message us on WhatsApp — we reply within 24 hours." path="/contact" />
       {/* ---------- Header ---------- */}
       <section className="relative overflow-hidden text-white">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-900 via-brand-700 to-brand-500 animate-gradient-x" />
@@ -105,101 +105,102 @@ export default function Contact() {
         </aside>
 
         {/* ---------- Form column ---------- */}
-        {authed ? (
-          <form
-            onSubmit={submit}
-            className="relative card p-6 md:p-8 overflow-hidden animate-fade-up delay-100"
-          >
-            <div className="pointer-events-none absolute -top-16 -right-16 w-60 h-60 bg-brand-100 rounded-full blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-16 -left-16 w-60 h-60 bg-lime-100 rounded-full blur-3xl" />
+        <form
+          onSubmit={submit}
+          className="relative card p-6 md:p-8 overflow-hidden animate-fade-up delay-100"
+        >
+          <div className="pointer-events-none absolute -top-16 -right-16 w-60 h-60 bg-brand-100 rounded-full blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-16 -left-16 w-60 h-60 bg-lime-100 rounded-full blur-3xl" />
 
-            <div className="relative">
-              <h2 className="text-2xl font-bold">Send us a message</h2>
-              <p className="text-sm text-gray-500 mt-1">
-                Signed in as <span className="font-semibold text-gray-700">{user?.name}</span> · {user?.email}
-              </p>
+          <div className="relative">
+            <h2 className="text-2xl font-bold">Send us a message</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              {authed
+                ? <>Signed in as <span className="font-semibold text-gray-700">{user?.name}</span> · {user?.email}</>
+                : "Product questions, custom builds, bulk orders — we'll reply within 24 hours."}
+            </p>
 
-              {msg && (
-                <div
-                  className={`mt-5 p-3 rounded-lg text-sm border flex items-start gap-2 animate-fade-in ${
-                    msg.type === 'ok'
-                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                      : 'bg-rose-50 text-rose-700 border-rose-200'
-                  }`}
-                >
-                  <span className="text-lg leading-none">{msg.type === 'ok' ? '✓' : '⚠'}</span>
-                  <span>{msg.text}</span>
-                </div>
-              )}
-
-              <Field label="Phone (optional)" className="mt-5">
-                <input
-                  className="input"
-                  value={form.phone}
-                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                  placeholder={user?.phone || '+91 …'}
-                />
-              </Field>
-
-              <Field label="Message *" className="mt-4">
-                <textarea
-                  className="input"
-                  rows="6"
-                  required
-                  value={form.message}
-                  onChange={(e) => setForm({ ...form, message: e.target.value })}
-                  placeholder="Tell us what you're looking for…"
-                />
-              </Field>
-
-              <button
-                className="btn mt-6 w-full bg-gradient-to-r from-brand-400 to-brand-600 text-white
-                           hover:from-brand-500 hover:to-brand-700 px-6 py-3 font-semibold
-                           shadow-lg shadow-brand-600/20 hover-lift disabled:opacity-60 disabled:cursor-not-allowed
-                           disabled:transform-none"
-                disabled={busy}
+            {msg && (
+              <div
+                className={`mt-5 p-3 rounded-lg text-sm border flex items-start gap-2 animate-fade-in ${
+                  msg.type === 'ok'
+                    ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                    : 'bg-rose-50 text-rose-700 border-rose-200'
+                }`}
               >
-                {busy ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Sending…
-                  </span>
-                ) : (
-                  'Send enquiry →'
-                )}
-              </button>
-
-              <p className="text-[11px] text-gray-400 text-center mt-3">
-                We'll never share your details. By submitting you agree to our privacy policy.
-              </p>
-            </div>
-          </form>
-        ) : (
-          <div className="relative card p-8 md:p-10 overflow-hidden animate-fade-up delay-100 text-center">
-            <div className="pointer-events-none absolute -top-16 -right-16 w-60 h-60 bg-brand-100 rounded-full blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-16 -left-16 w-60 h-60 bg-lime-100 rounded-full blur-3xl" />
-            <div className="relative">
-              <div className="text-5xl">🔐</div>
-              <h2 className="text-2xl font-extrabold mt-3">
-                Sign in to send an <span className="bg-gradient-to-r from-brand-500 to-brand-700 bg-clip-text text-transparent">enquiry</span>
-              </h2>
-              <p className="text-sm text-gray-600 mt-2 max-w-sm mx-auto">
-                We require a free account so we can reply to you and so you can track your conversation history.
-              </p>
-              <div className="mt-6 flex gap-2 justify-center">
-                <Link to={`/login?next=${encodeURIComponent(location.pathname)}`}
-                      className="btn bg-gradient-to-r from-brand-500 to-brand-600 text-white px-6 py-2.5 font-semibold shadow shadow-brand-500/30 hover:from-brand-600 hover:to-brand-700">
-                  Sign in
-                </Link>
-                <Link to={`/register?next=${encodeURIComponent(location.pathname)}`}
-                      className="btn-secondary px-6 py-2.5">
-                  Create account
-                </Link>
+                <span className="text-lg leading-none">{msg.type === 'ok' ? '✓' : '⚠'}</span>
+                <span>{msg.text}</span>
               </div>
-              <p className="text-[11px] text-gray-400 mt-4">It takes 30 seconds — name, email, password.</p>
-            </div>
+            )}
+
+            {!authed && (
+              <div className="grid sm:grid-cols-2 gap-4 mt-5">
+                <Field label="Name *">
+                  <input
+                    className="input"
+                    required
+                    maxLength={120}
+                    value={form.name}
+                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    placeholder="Your name"
+                  />
+                </Field>
+                <Field label="Email *">
+                  <input
+                    className="input"
+                    type="email"
+                    required
+                    maxLength={190}
+                    value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    placeholder="you@example.com"
+                  />
+                </Field>
+              </div>
+            )}
+
+            <Field label="Phone (optional)" className="mt-4">
+              <input
+                className="input"
+                value={form.phone}
+                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                placeholder={user?.phone || '+91 …'}
+              />
+            </Field>
+
+            <Field label="Message *" className="mt-4">
+              <textarea
+                className="input"
+                rows="6"
+                required
+                value={form.message}
+                onChange={(e) => setForm({ ...form, message: e.target.value })}
+                placeholder="Tell us what you're looking for…"
+              />
+            </Field>
+
+            <button
+              className="btn mt-6 w-full bg-gradient-to-r from-brand-400 to-brand-600 text-white
+                         hover:from-brand-500 hover:to-brand-700 px-6 py-3 font-semibold
+                         shadow-lg shadow-brand-600/20 hover-lift disabled:opacity-60 disabled:cursor-not-allowed
+                         disabled:transform-none"
+              disabled={busy}
+            >
+              {busy ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Sending…
+                </span>
+              ) : (
+                'Send enquiry →'
+              )}
+            </button>
+
+            <p className="text-[11px] text-gray-400 text-center mt-3">
+              We'll never share your details. By submitting you agree to our privacy policy.
+            </p>
           </div>
-        )}
+        </form>
       </div>
     </>
   );

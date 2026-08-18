@@ -1,40 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import AnnouncementBar from './AnnouncementBar';
-import CustomerBell from './CustomerBell';
-import { clearWishlistCache } from './WishlistButton';
-import api from '../api';
-import { clearAuth } from '../auth';
-import { useAuth } from '../hooks/useAuth';
 
+// Public storefront navbar — no sign-in / account UI.
 export default function Navbar() {
   const [open, setOpen]   = useState(false);
   const [search, setSearch] = useState('');
   const [scrolled, setScrolled] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const userMenuRef = useRef(null);
   const navigate = useNavigate();
-  const { authed, user } = useAuth();
-
-  // close user menu on outside click
-  useEffect(() => {
-    if (!userMenuOpen) return;
-    const handler = (e) => {
-      if (userMenuRef.current && !userMenuRef.current.contains(e.target)) setUserMenuOpen(false);
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, [userMenuOpen]);
-
-  const logout = async () => {
-    setUserMenuOpen(false);
-    try { await api.post('/auth/logout'); } catch {}
-    clearAuth();
-    clearWishlistCache();      // drop the next user's stale heart state
-    navigate('/', { replace: true });
-  };
-
-  const initials = (user?.name || 'U').split(' ').slice(0, 2).map((s) => s[0]?.toUpperCase() || '').join('');
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -109,7 +82,7 @@ export default function Navbar() {
           </form>
 
           {/* desktop nav */}
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1 ml-auto">
             <NavItem to="/" end>Home</NavItem>
             <NavItem to="/products">Products</NavItem>
             <NavItem to="/upcoming">Coming Soon</NavItem>
@@ -117,83 +90,19 @@ export default function Navbar() {
             <NavItem to="/contact">Contact</NavItem>
           </nav>
 
-          {/* right actions */}
-          <div className="flex items-center gap-2 ml-auto lg:ml-0">
-            {/* auth area */}
-            {authed ? (
-              <>
-                <div className="hidden md:block">
-                  <CustomerBell />
-                </div>
-                <div ref={userMenuRef} className="relative hidden md:block">
-                  <button
-                    type="button"
-                    onClick={() => setUserMenuOpen((s) => !s)}
-                    className="flex items-center gap-2 pl-1 pr-2.5 py-1 rounded-full hover:bg-gray-100 transition"
-                    aria-label="Account menu"
-                  >
-                    <span className="w-8 h-8 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-white text-xs font-bold flex items-center justify-center shadow shadow-brand-500/30">
-                      {initials || 'U'}
-                    </span>
-                    <span className="text-sm font-semibold text-gray-700 hidden sm:inline max-w-[120px] truncate">{user?.name}</span>
-                    <svg viewBox="0 0 24 24" className={`w-4 h-4 text-gray-500 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M6 9l6 6 6-6"/></svg>
-                  </button>
-
-                  <div className={`absolute right-0 mt-2 w-60 origin-top-right transition-all duration-200 z-30 ${
-                    userMenuOpen ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-95 pointer-events-none'
-                  }`}>
-                    <div className="card overflow-hidden ring-1 ring-gray-200 shadow-xl">
-                      <div className="px-4 py-3 bg-gradient-to-r from-brand-50 via-white to-emerald-50 border-b border-gray-100">
-                        <div className="text-xs text-gray-500">Signed in as</div>
-                        <div className="font-semibold text-gray-900 truncate">{user?.name}</div>
-                        <div className="text-xs text-gray-500 truncate">{user?.email}</div>
-                      </div>
-                      <Link to="/dashboard" onClick={() => setUserMenuOpen(false)}
-                            className="block px-4 py-2.5 text-sm hover:bg-brand-50/60 text-gray-700 font-medium transition">
-                        My dashboard
-                      </Link>
-                      <Link to="/dashboard/enquiries" onClick={() => setUserMenuOpen(false)}
-                            className="block px-4 py-2.5 text-sm hover:bg-brand-50/60 text-gray-700 transition">
-                        My enquiries
-                      </Link>
-                      <Link to="/dashboard/profile" onClick={() => setUserMenuOpen(false)}
-                            className="block px-4 py-2.5 text-sm hover:bg-brand-50/60 text-gray-700 transition">
-                        Profile
-                      </Link>
-                      <button onClick={logout}
-                              className="w-full text-left px-4 py-2.5 text-sm font-semibold text-rose-600 hover:bg-rose-50 transition border-t border-gray-100">
-                        Sign out
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : (
-              <div className="hidden md:flex items-center gap-2">
-                <Link to="/login" className="text-sm font-semibold text-gray-700 hover:text-brand-700 px-3 py-1.5 transition">
-                  Sign in
-                </Link>
-                <Link to="/register"
-                      className="btn bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700 text-white px-4 py-1.5 text-sm font-semibold shadow shadow-brand-500/30">
-                  Sign up
-                </Link>
-              </div>
-            )}
-
-            {/* mobile menu toggle */}
-            <button
-              type="button"
-              onClick={() => setOpen((s) => !s)}
-              className="lg:hidden ml-1 w-10 h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center"
-              aria-label="Toggle menu"
-            >
-              <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
-                {open
-                  ? <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round"/>
-                  : <path d="M3 6h18M3 12h18M3 18h18" strokeLinecap="round"/>}
-              </svg>
-            </button>
-          </div>
+          {/* mobile menu toggle */}
+          <button
+            type="button"
+            onClick={() => setOpen((s) => !s)}
+            className="lg:hidden ml-auto w-10 h-10 rounded-lg hover:bg-gray-100 flex items-center justify-center"
+            aria-label="Toggle menu"
+          >
+            <svg viewBox="0 0 24 24" className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2">
+              {open
+                ? <path d="M6 6l12 12M6 18L18 6" strokeLinecap="round"/>
+                : <path d="M3 6h18M3 12h18M3 18h18" strokeLinecap="round"/>}
+            </svg>
+          </button>
         </div>
 
         {/* mobile drawer */}
@@ -221,28 +130,6 @@ export default function Navbar() {
             <MobileItem to="/upcoming" onClick={() => setOpen(false)}>Coming Soon</MobileItem>
             <MobileItem to="/about" onClick={() => setOpen(false)}>About</MobileItem>
             <MobileItem to="/contact" onClick={() => setOpen(false)}>Contact</MobileItem>
-
-            {authed ? (
-              <>
-                <div className="px-4 pt-3 mt-2 border-t border-gray-100">
-                  <div className="text-xs text-gray-500">Signed in as</div>
-                  <div className="text-sm font-semibold truncate">{user?.name}</div>
-                </div>
-                <button
-                  onClick={() => { setOpen(false); logout(); }}
-                  className="block w-full text-left px-4 py-2.5 rounded-lg text-sm font-semibold text-rose-600 hover:bg-rose-50"
-                >
-                  Sign out
-                </button>
-              </>
-            ) : (
-              <div className="pt-3 mt-2 border-t border-gray-100 flex gap-2 px-1">
-                <Link to="/login" onClick={() => setOpen(false)}
-                      className="btn-secondary flex-1 text-center">Sign in</Link>
-                <Link to="/register" onClick={() => setOpen(false)}
-                      className="btn bg-gradient-to-r from-brand-500 to-brand-600 text-white flex-1 text-center font-semibold">Sign up</Link>
-              </div>
-            )}
           </div>
         </div>
       </header>
@@ -293,4 +180,3 @@ function MobileItem({ to, end, onClick, children }) {
     </NavLink>
   );
 }
-

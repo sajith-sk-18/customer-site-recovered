@@ -5,15 +5,15 @@ import ProductCard from '../components/ProductCard';
 import Tilt3D from '../components/Tilt3D';
 import UpcomingCard from '../components/UpcomingCard';
 import RecentlyViewed from '../components/RecentlyViewed';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import BrandStrip from '../components/BrandStrip';
+import Seo, { SITE_URL } from '../components/Seo';
 
 export default function Home() {
   const [featured, setFeatured] = useState([]);
   const [accessories, setAccessories] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  useDocumentTitle('Quality laptops & accessories');
 
   useEffect(() => {
     let cancelled = false;
@@ -25,6 +25,7 @@ export default function Home() {
 
         const r2 = await api.get('/categories');
         if (cancelled) return;
+        setCategories(r2.data || []);
         const acc = r2.data.find((c) => c.slug === 'accessories');
         if (acc) {
           const r3 = await api.get('/products', { params: { category_id: acc.id, per_page: 4 } });
@@ -46,6 +47,18 @@ export default function Home() {
 
   return (
     <>
+      <Seo
+        title="Quality laptops & accessories"
+        description="Discover featured laptops, gaming notebooks and accessories at Fluro Tech. Compare specs and enquire instantly on WhatsApp."
+        path="/"
+        jsonLd={[
+          { '@context': 'https://schema.org', '@type': 'Organization', name: 'Fluro Tech', url: SITE_URL, logo: `${SITE_URL}/logo.jpg` },
+          {
+            '@context': 'https://schema.org', '@type': 'WebSite', name: 'Fluro Tech', url: SITE_URL,
+            potentialAction: { '@type': 'SearchAction', target: `${SITE_URL}/products?q={search_term_string}`, 'query-input': 'required name=search_term_string' },
+          },
+        ]}
+      />
       {/* ---------- Hero ---------- */}
       <section className="relative overflow-hidden text-white">
         {/* animated gradient backdrop */}
@@ -99,7 +112,12 @@ export default function Home() {
           <div className="hidden md:flex justify-center relative animate-fade-in delay-300">
             <div className="absolute inset-0 bg-white/10 blur-3xl rounded-full" />
             <Tilt3D max={16} glare={false} card={false} className="relative">
-              <div className="text-[16rem] drop-shadow-2xl animate-float select-none">💻</div>
+              <img
+                src="https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=900&q=80&auto=format&fit=crop"
+                alt="Premium laptop"
+                draggable={false}
+                className="relative w-[26rem] max-w-full rounded-2xl object-cover shadow-2xl shadow-black/30 animate-float select-none ring-1 ring-white/20"
+              />
             </Tilt3D>
             <div className="absolute top-10 right-0 bg-white/10 backdrop-blur-md border border-white/20 rounded-xl px-4 py-2 text-sm shadow-lg animate-fade-up delay-500">
               ⚡ <span className="font-semibold">i9 · 32GB · RTX</span>
@@ -133,6 +151,35 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ---------- Shop by Category ---------- */}
+      {categories.filter((c) => c.image).length > 0 && (
+        <section className="container mx-auto px-4 py-14">
+          <div className="text-xs uppercase tracking-widest text-brand-600 font-semibold">Browse</div>
+          <h2 className="text-3xl font-bold mt-1 mb-6">Shop by category</h2>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {categories.filter((c) => c.image).map((c) => (
+              <Link
+                key={c.id}
+                to={`/products?category_id=${c.id}`}
+                className="group relative rounded-2xl overflow-hidden border border-gray-200 hover:border-brand-300 shadow-sm transition"
+              >
+                <div className="aspect-[4/3] overflow-hidden bg-gray-100">
+                  <img src={c.image} alt={c.name} className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/15 to-transparent" />
+                <div className="absolute bottom-0 left-0 right-0 p-3">
+                  <div className="text-white font-semibold leading-tight">{c.name}</div>
+                  <div className="text-white/80 text-xs">{c.products_count ?? 0} products</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* ---------- Shop by Brand ---------- */}
+      <BrandStrip />
 
       {/* ---------- Featured ---------- */}
       <section className="container mx-auto px-4 py-14">

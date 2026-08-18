@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
+import Seo from '../components/Seo';
 
 export default function About() {
   return (
     <>
+      <Seo title="About us" description="Fluro Tech is your trusted store for laptops, gaming notebooks and accessories — quality products, honest advice and instant WhatsApp support." path="/about" />
       {/* ---------- Header ---------- */}
       <section className="relative overflow-hidden text-white">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-700 via-brand-500 to-brand-400 animate-gradient-x" />

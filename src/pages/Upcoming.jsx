@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import api from '../api';
 import UpcomingCard from '../components/UpcomingCard';
+import Seo from '../components/Seo';
 
 export default function Upcoming() {
   const [list, setList] = useState([]);
@@ -16,6 +17,7 @@ export default function Upcoming() {
 
   return (
     <>
+      <Seo title="Coming soon" description="See the upcoming laptops and tech launching soon at Fluro Tech. Get notified and enquire early on WhatsApp." path="/upcoming" />
       <section className="relative overflow-hidden text-white">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-700 via-brand-500 to-brand-400 animate-gradient-x" />
         <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 bg-brand-500/30 rounded-full blur-3xl animate-blob" />

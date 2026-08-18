@@ -1,67 +1,93 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import api from '../api';
 import ProductCard from '../components/ProductCard';
 import Breadcrumbs from '../components/Breadcrumbs';
-import { useDocumentTitle } from '../hooks/useDocumentTitle';
+import Seo from '../components/Seo';
 
 const FILTER_KEYS = ['q', 'category_id', 'brand', 'min_price', 'max_price'];
+
+const PER_PAGE = 6; // ~2 rows on desktop (3 columns); loads 2 more rows as you scroll.
 
 export default function Products() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [meta, setMeta] = useState({ last_page: 1 });
-  const [loading, setLoading] = useState(false);
+  const [total, setTotal] = useState(undefined);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loading, setLoading] = useState(true);        // initial / filter-change load
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  // URL is the single source of truth for filters + page, so the Navbar
-  // search bar (which navigates to /products?q=…) just works, and the page
-  // is refresh/bookmark safe.
+  // Filters live in the URL so the Navbar search + bookmarks/refresh work.
   const [searchParams, setSearchParams] = useSearchParams();
+  const sentinelRef = useRef(null);
 
   const filters = useMemo(
     () => Object.fromEntries(FILTER_KEYS.map((k) => [k, searchParams.get(k) || ''])),
     [searchParams]
   );
-  const page = Number(searchParams.get('page')) || 1;
+  const filterKey = JSON.stringify(filters);
+
+  const fetchPage = useCallback(async (pageNum, replace) => {
+    const params = { ...filters, page: pageNum, per_page: PER_PAGE };
+    Object.keys(params).forEach((k) => { if (params[k] === '' || params[k] == null) delete params[k]; });
+    const r = await api.get('/products', { params });
+    const data = r.data.data || [];
+    setTotal(r.data.total);
+    setPage(r.data.current_page || pageNum);
+    setHasMore((r.data.current_page || pageNum) < (r.data.last_page || 1));
+    setProducts((prev) => (replace ? data : [...prev, ...data]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey]);
 
   useEffect(() => {
     api.get('/categories').then((r) => setCategories(r.data)).catch(() => {});
   }, []);
 
-  useDocumentTitle(filters.q ? `Search: ${filters.q}` : 'All products');
-
+  // (Re)load from page 1 whenever the filters change.
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
-    const params = { ...filters, page };
-    Object.keys(params).forEach((k) => { if (params[k] === '' || params[k] === null) delete params[k]; });
-
-    api.get('/products', { params }).then((r) => {
-      if (cancelled) return;
-      setProducts(r.data.data || []);
-      setMeta({ last_page: r.data.last_page, total: r.data.total });
-    }).catch(() => {
-      if (!cancelled) setProducts([]);
-    }).finally(() => {
-      if (!cancelled) setLoading(false);
-    });
-
+    setProducts([]);
+    fetchPage(1, true)
+      .catch(() => { if (!cancelled) setProducts([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
-  }, [searchParams]);
+  }, [filterKey, fetchPage]);
 
-  // Write a single filter into the URL, clearing page=1.
-  // Use replace:true for text inputs so per-keystroke URL updates don't
-  // pollute browser history; chip clicks/pagination use a new history entry.
+  const loadMore = useCallback(async () => {
+    if (loadingMore || loading || !hasMore) return;
+    setLoadingMore(true);
+    try { await fetchPage(page + 1, false); } catch { /* keep what we have */ }
+    finally { setLoadingMore(false); }
+  }, [loadingMore, loading, hasMore, page, fetchPage]);
+
+  // Infinite scroll: load the next batch as the sentinel nears the viewport.
+  // IntersectionObserver is primary; a throttled scroll listener is a reliable fallback.
+  useEffect(() => {
+    const el = sentinelRef.current;
+    const obs = el
+      ? new IntersectionObserver(
+          (entries) => { if (entries[0].isIntersecting) loadMore(); },
+          { rootMargin: '400px' }
+        )
+      : null;
+    if (obs && el) obs.observe(el);
+
+    const onScroll = () => {
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 600) {
+        loadMore();
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => { if (obs) obs.disconnect(); window.removeEventListener('scroll', onScroll); };
+  }, [loadMore]);
+
   const set = (k, v, replace = false) => {
     const next = new URLSearchParams(searchParams);
     if (v === '' || v == null) next.delete(k); else next.set(k, v);
     next.delete('page');
     setSearchParams(next, { replace });
-  };
-  const setPage = (n) => {
-    const next = new URLSearchParams(searchParams);
-    if (n <= 1) next.delete('page'); else next.set('page', String(n));
-    setSearchParams(next, { replace: false });
   };
   const clearAll = () => setSearchParams(new URLSearchParams());
 
@@ -69,6 +95,11 @@ export default function Products() {
 
   return (
     <>
+      <Seo
+        title={filters.q ? `Search: ${filters.q}` : 'All laptops & accessories'}
+        description="Browse all laptops, gaming notebooks and accessories at Fluro Tech. Filter by brand, price and category, then enquire on WhatsApp."
+        path="/products"
+      />
       {/* ---------- Page header ---------- */}
       <section className="relative overflow-hidden text-white">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-700 via-brand-500 to-brand-400 animate-gradient-x" />
@@ -93,6 +124,25 @@ export default function Products() {
       <div className="container mx-auto px-4 pt-6">
         <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'Products' }]} />
       </div>
+
+      {(() => {
+        const activeCat = categories.find((c) => String(c.id) === String(filters.category_id));
+        if (!activeCat || !activeCat.image) return null;
+        return (
+          <div className="container mx-auto px-4 pt-2">
+            <div className="relative overflow-hidden rounded-2xl border border-gray-200 min-h-[140px]">
+              <img src={activeCat.image} alt={activeCat.name} className="absolute inset-0 w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-transparent" />
+              <div className="relative p-6 md:p-8">
+                <div className="text-xs uppercase tracking-widest text-white/80">Category</div>
+                <h2 className="text-2xl md:text-3xl font-extrabold text-white mt-1">{activeCat.name}</h2>
+                {activeCat.description && <p className="text-white/85 max-w-xl mt-1 text-sm">{activeCat.description}</p>}
+                <div className="text-white/80 text-xs mt-2">{activeCat.products_count ?? 0} products</div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
 
       <div className="container mx-auto px-4 py-6 grid md:grid-cols-[260px_1fr] gap-6">
         {/* ---------- Filters ---------- */}
@@ -172,9 +222,9 @@ export default function Products() {
           <div className="flex items-center justify-between mb-5 animate-fade-up">
             <div>
               <h2 className="text-2xl font-bold">Results</h2>
-              {meta.total !== undefined && (
+              {total !== undefined && (
                 <div className="text-sm text-gray-500 mt-0.5">
-                  {meta.total} product{meta.total === 1 ? '' : 's'} found
+                  {total} product{total === 1 ? '' : 's'} found
                 </div>
               )}
             </div>
@@ -189,17 +239,8 @@ export default function Products() {
           </div>
 
           {loading ? (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {[0,1,2,3,4,5].map((i) => (
-                <div key={i} className="card overflow-hidden">
-                  <div className="aspect-[4/3] shimmer" />
-                  <div className="p-3 space-y-2">
-                    <div className="h-3 w-1/3 shimmer rounded" />
-                    <div className="h-4 w-3/4 shimmer rounded" />
-                    <div className="h-4 w-1/2 shimmer rounded" />
-                  </div>
-                </div>
-              ))}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+              {Array.from({ length: PER_PAGE }).map((_, i) => <SkeletonCard key={i} />)}
             </div>
           ) : products.length === 0 ? (
             <div className="card p-12 text-center animate-fade-up">
@@ -209,55 +250,45 @@ export default function Products() {
               <button onClick={clearAll} className="btn-primary mt-5 hover-lift">Clear filters</button>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {products.map((p, i) => (
-                <div
-                  key={p.id}
-                  className="animate-fade-up"
-                  style={{ animationDelay: `${i * 60}ms` }}
-                >
-                  <ProductCard product={p} />
-                </div>
-              ))}
-            </div>
-          )}
-
-          {meta.last_page > 1 && (
-            <div className="flex justify-center items-center gap-2 mt-10">
-              <button
-                className="btn-secondary hover-lift disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
-                disabled={page <= 1}
-                onClick={() => setPage(page - 1)}
-              >
-                ‹ Prev
-              </button>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: meta.last_page }, (_, i) => i + 1).map((n) => (
-                  <button
-                    key={n}
-                    onClick={() => setPage(n)}
-                    className={`w-9 h-9 rounded-lg text-sm font-medium transition ${
-                      n === page
-                        ? 'bg-brand-600 text-white shadow'
-                        : 'bg-white border border-gray-200 text-gray-700 hover:border-brand-300 hover:text-brand-700'
-                    }`}
+            <>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                {products.map((p, i) => (
+                  <div
+                    key={p.id}
+                    className="animate-fade-up"
+                    style={{ animationDelay: `${(i % PER_PAGE) * 60}ms` }}
                   >
-                    {n}
-                  </button>
+                    <ProductCard product={p} />
+                  </div>
                 ))}
+                {loadingMore && Array.from({ length: PER_PAGE }).map((_, i) => <SkeletonCard key={`more-${i}`} />)}
               </div>
-              <button
-                className="btn-secondary hover-lift disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
-                disabled={page >= meta.last_page}
-                onClick={() => setPage(page + 1)}
-              >
-                Next ›
-              </button>
-            </div>
+
+              {/* infinite-scroll trigger */}
+              <div ref={sentinelRef} className="h-12" />
+              {!hasMore && (
+                <div className="text-center text-sm text-gray-400 mt-2">
+                  You’ve reached the end · {total} product{total === 1 ? '' : 's'}
+                </div>
+              )}
+            </>
           )}
         </section>
       </div>
     </>
+  );
+}
+
+function SkeletonCard() {
+  return (
+    <div className="card overflow-hidden">
+      <div className="aspect-[4/3] shimmer" />
+      <div className="p-4 space-y-2">
+        <div className="h-3 w-1/3 shimmer rounded" />
+        <div className="h-4 w-3/4 shimmer rounded" />
+        <div className="h-4 w-1/2 shimmer rounded" />
+      </div>
+    </div>
   );
 }
 
