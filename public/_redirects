@@ -1,9 +1,15 @@
 # Cloudflare Pages routing (this file replaces .htaccess — Pages ignores Apache config).
-# Copied verbatim into dist/ by Vite. FIRST MATCH WINS, so /admin must come first.
+# Copied verbatim into dist/ by Vite. FIRST MATCH WINS.
 
-# Admin panel (built into dist/admin/ by the Pages build command) — its own SPA fallback.
-/admin/*  /admin/index.html  200
+# The admin panel used to be served from /admin/ on this domain. It is now its own Pages
+# project, because a direct load or refresh of /admin/<route> fell through to the rule
+# below and served the STOREFRONT's index.html — the wrong app. Nesting two SPAs behind
+# one catch-all does not work on Pages the way it does under Apache.
+#
+# These keep old bookmarks working. External redirects, so they must be absolute URLs.
+/admin      https://fluro-admin.pages.dev/       302
+/admin/*    https://fluro-admin.pages.dev/:splat 302
 
 # Storefront SPA fallback. Real files (assets, prerendered products/<id>/index.html,
-# sitemap.xml, robots.txt) are served before these rules apply.
-/*        /index.html        200
+# sitemap.xml, robots.txt) are served before this rule applies.
+/*          /index.html                          200
