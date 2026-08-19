@@ -47,9 +47,12 @@ export default function Home() {
 
   return (
     <>
+      {/* No `title` on purpose: Seo.jsx falls back to "Fluro Tech — Laptops & Accessories",
+          which leads with the brand. Passing a title would render it as
+          "<title> · Fluro Tech", burying the name. Keep this in step with the '/' route in
+          scripts/prerender.mjs, which crawlers actually read. */}
       <Seo
-        title="Quality laptops & accessories"
-        description="Discover featured laptops, gaming notebooks and accessories at Fluro Tech. Compare specs and enquire instantly on WhatsApp."
+        description="Fluro Tech — shop laptops, gaming notebooks, monitors and accessories. Compare specs, check stock and enquire instantly on WhatsApp."
         path="/"
         jsonLd={[
           { '@context': 'https://schema.org', '@type': 'Organization', name: 'Fluro Tech', url: SITE_URL, logo: `${SITE_URL}/logo.jpg` },

@@ -104,7 +104,11 @@ async function main() {
   const template = readFileSync(join(DIST, 'index.html'), 'utf8');
 
   const routes = [
-    { path: '/', seo: { title: 'Quality laptops & accessories', description: 'Discover featured laptops, gaming notebooks and accessories at Fluro Tech. Compare specs and enquire instantly on WhatsApp.', path: '/', jsonLd: [
+    // No `title`: the helper above falls back to `${SITE_NAME} — Laptops & Accessories`,
+    // so the homepage <title> LEADS with the brand instead of burying it after a dash.
+    // Must match src/pages/Home.jsx, or the client render would replace the title with a
+    // different one after hydration.
+    { path: '/', seo: { description: 'Fluro Tech — shop laptops, gaming notebooks, monitors and accessories. Compare specs, check stock and enquire instantly on WhatsApp.', path: '/', jsonLd: [
       { '@context': 'https://schema.org', '@type': 'Organization', name: SITE_NAME, url: SITE_URL, logo: `${SITE_URL}/logo.jpg` },
       { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, url: SITE_URL, potentialAction: { '@type': 'SearchAction', target: `${SITE_URL}/products?q={search_term_string}`, 'query-input': 'required name=search_term_string' } },
     ] } },
