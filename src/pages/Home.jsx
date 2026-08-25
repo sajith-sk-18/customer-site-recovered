@@ -52,7 +52,7 @@ export default function Home() {
           "<title> · Fluro Tech", burying the name. Keep this in step with the '/' route in
           scripts/prerender.mjs, which crawlers actually read. */}
       <Seo
-        description="Fluro Tech — shop laptops, gaming notebooks, monitors and accessories. Compare specs, check stock and enquire instantly on WhatsApp."
+        description="Fluro Tech in Marthandam and Melpuram — new and second hand laptops, accessories, and CCTV installation. Compare specs, check stock and enquire instantly on WhatsApp."
         path="/"
         jsonLd={[
           { '@context': 'https://schema.org', '@type': 'Organization', name: 'Fluro Tech', url: SITE_URL, logo: `${SITE_URL}/logo.jpg` },

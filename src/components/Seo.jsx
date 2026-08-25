@@ -10,9 +10,14 @@ import { useEffect } from 'react';
  */
 const SITE_NAME = 'Fluro Tech';
 const SITE_URL = (import.meta.env.VITE_SITE_URL || 'http://localhost:5175').replace(/\/$/, '');
+// Local intent: the winnable searches are "used laptop Marthandam",
+// "second hand laptop Melpuram", "cctv Marthandam" — not the national generics,
+// which belong to Amazon and Flipkart. The town names and the words customers
+// actually type ("second hand", "used", "CCTV") have to appear in the copy, or
+// there is nothing for Google to match.
 const DEFAULT_DESC =
-  'Fluro Tech — shop the latest laptops, gaming notebooks and accessories at great prices. ' +
-  'Browse specs, compare models and enquire instantly on WhatsApp.';
+  'Fluro Tech in Marthandam and Melpuram — new and second hand laptops, accessories, ' +
+  'and CCTV installation. Compare specs, check stock and enquire instantly on WhatsApp.';
 
 function abs(u) {
   if (!u) return `${SITE_URL}/logo.jpg`;
@@ -39,7 +44,9 @@ function upsertLink(rel, href) {
 
 export default function Seo({ title, description, path, image, type = 'website', noindex = false, jsonLd }) {
   useEffect(() => {
-    const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} — Laptops & Accessories`;
+    const fullTitle = title
+      ? `${title} · ${SITE_NAME}`
+      : `${SITE_NAME} — Laptops, Used Laptops & CCTV in Marthandam`;
     const desc = description || DEFAULT_DESC;
     const canonical = `${SITE_URL}${path ?? window.location.pathname}`;
     const ogImage = abs(image);

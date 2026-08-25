@@ -32,7 +32,8 @@ function readEnv(name, fallback) {
 const SITE_URL = readEnv('VITE_SITE_URL', 'http://localhost:5175').replace(/\/$/, '');
 const API_URL = readEnv('VITE_API_URL', 'http://127.0.0.1:8001/api').replace(/\/$/, '');
 const SITE_NAME = 'Fluro Tech';
-const DEFAULT_DESC = 'Fluro Tech — shop the latest laptops, gaming notebooks and accessories at great prices. Browse specs, compare models and enquire instantly on WhatsApp.';
+// Must match src/components/Seo.jsx — this is what crawlers read.
+const DEFAULT_DESC = 'Fluro Tech in Marthandam and Melpuram — new and second hand laptops, accessories, and CCTV installation. Compare specs, check stock and enquire instantly on WhatsApp.';
 
 const esc = (s) => String(s ?? '')
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -42,7 +43,9 @@ const absImg = (u) => (!u ? `${SITE_URL}/logo.jpg` : /^https?:\/\//.test(u) ? u 
 
 // Build the <head> SEO block for a route.
 function headBlock({ title, description, path, image, type = 'website', jsonLd = [] }) {
-  const fullTitle = title ? `${title} · ${SITE_NAME}` : `${SITE_NAME} — Laptops & Accessories`;
+  const fullTitle = title
+    ? `${title} · ${SITE_NAME}`
+    : `${SITE_NAME} — Laptops, Used Laptops & CCTV in Marthandam`;
   const desc = description || DEFAULT_DESC;
   const url = `${SITE_URL}${path}`;
   const img = absImg(image);
@@ -108,7 +111,19 @@ async function main() {
     // so the homepage <title> LEADS with the brand instead of burying it after a dash.
     // Must match src/pages/Home.jsx, or the client render would replace the title with a
     // different one after hydration.
-    { path: '/', seo: { description: 'Fluro Tech — shop laptops, gaming notebooks, monitors and accessories. Compare specs, check stock and enquire instantly on WhatsApp.', path: '/', jsonLd: [
+    { path: '/', seo: { description: 'Fluro Tech in Marthandam and Melpuram — new and second hand laptops, accessories, and CCTV installation. Compare specs, check stock and enquire instantly on WhatsApp.', path: '/', jsonLd: [
+      // LocalBusiness with areaServed is the strongest local signal available in
+      // code. Deliberately no street address, phone or opening hours — those were
+      // not supplied and must not be invented; add them here once known, as they
+      // materially help local ranking.
+      { '@context': 'https://schema.org', '@type': 'LocalBusiness', name: SITE_NAME, url: SITE_URL,
+        image: `${SITE_URL}/logo.jpg`,
+        description: 'New and second hand laptops, accessories and CCTV installation in Marthandam and Melpuram.',
+        areaServed: [
+          { '@type': 'City', name: 'Marthandam' },
+          { '@type': 'City', name: 'Melpuram' },
+        ],
+        address: { '@type': 'PostalAddress', addressLocality: 'Marthandam', addressRegion: 'Tamil Nadu', addressCountry: 'IN' } },
       { '@context': 'https://schema.org', '@type': 'Organization', name: SITE_NAME, url: SITE_URL, logo: `${SITE_URL}/logo.jpg` },
       { '@context': 'https://schema.org', '@type': 'WebSite', name: SITE_NAME, url: SITE_URL, potentialAction: { '@type': 'SearchAction', target: `${SITE_URL}/products?q={search_term_string}`, 'query-input': 'required name=search_term_string' } },
     ] } },
