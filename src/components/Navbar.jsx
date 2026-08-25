@@ -85,6 +85,8 @@ export default function Navbar() {
           <nav className="hidden lg:flex items-center gap-1 ml-auto">
             <NavItem to="/" end>Home</NavItem>
             <NavItem to="/products">Products</NavItem>
+            <NavItem to="/used-laptops">Used Laptops</NavItem>
+            <NavItem to="/cctv">CCTV</NavItem>
             <NavItem to="/upcoming">Coming Soon</NavItem>
             <NavItem to="/about">About</NavItem>
             <NavItem to="/contact">Contact</NavItem>
@@ -127,6 +129,8 @@ export default function Navbar() {
             </form>
             <MobileItem to="/" end onClick={() => setOpen(false)}>Home</MobileItem>
             <MobileItem to="/products" onClick={() => setOpen(false)}>Products</MobileItem>
+            <MobileItem to="/used-laptops" onClick={() => setOpen(false)}>Used Laptops</MobileItem>
+            <MobileItem to="/cctv" onClick={() => setOpen(false)}>CCTV</MobileItem>
             <MobileItem to="/upcoming" onClick={() => setOpen(false)}>Coming Soon</MobileItem>
             <MobileItem to="/about" onClick={() => setOpen(false)}>About</MobileItem>
             <MobileItem to="/contact" onClick={() => setOpen(false)}>Contact</MobileItem>

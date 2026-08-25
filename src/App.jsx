@@ -10,6 +10,8 @@ import ProductDetails from './pages/ProductDetails';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import Upcoming from './pages/Upcoming';
+import UsedLaptops from './pages/UsedLaptops';
+import Cctv from './pages/Cctv';
 
 // Public storefront only — no customer login/registration or account area.
 export default function App() {
@@ -26,6 +28,8 @@ export default function App() {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/upcoming" element={<Upcoming />} />
+          <Route path="/used-laptops" element={<UsedLaptops />} />
+          <Route path="/cctv" element={<Cctv />} />
           <Route path="*" element={<div className="container mx-auto p-12 text-center text-gray-500">Page not found.</div>} />
         </Routes>
       </main>

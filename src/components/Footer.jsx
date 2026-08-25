@@ -83,6 +83,8 @@ export default function Footer() {
         {/* Shop */}
         <FooterCol title="Shop">
           <FooterLink to="/products">All products</FooterLink>
+          <FooterLink to="/used-laptops">Second hand laptops</FooterLink>
+          <FooterLink to="/cctv">CCTV installation</FooterLink>
           <FooterLink to="/products?category_slug=laptops">Laptops</FooterLink>
           <FooterLink to="/products?category_slug=accessories">Accessories</FooterLink>
           <FooterLink to="/products?featured=1">Featured</FooterLink>
