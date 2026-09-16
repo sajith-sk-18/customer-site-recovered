@@ -10,7 +10,6 @@ import RelatedProducts from '../components/RelatedProducts';
 import RecentlyViewed from '../components/RecentlyViewed';
 import { inr } from '../lib/money';
 import { brandLogo } from '../lib/brands';
-import { useAuth } from '../hooks/useAuth';
 import { trackView } from '../lib/recentlyViewed';
 import { useEnquiry } from '../Enquiry';
 import Seo, { SITE_URL } from '../components/Seo';
@@ -18,18 +17,12 @@ import Seo, { SITE_URL } from '../components/Seo';
 export default function ProductDetails() {
   const { id } = useParams();
   const location = useLocation();
-  const { authed } = useAuth();
   const enquiry = useEnquiry();
   const [product, setProduct] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [activeImage, setActiveImage] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // Review form — name/email come from the account when logged in, or from
-  // the guest fields below otherwise.
-  const [form, setForm] = useState({ rating: 5, comment: '', name: '', email: '' });
-  const [submitting, setSubmitting] = useState(false);
-  const [msg, setMsg] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,27 +44,6 @@ export default function ProductDetails() {
     return () => { cancelled = true; };
   }, [id]);
 
-  const submitReview = async (e) => {
-    e.preventDefault();
-    setSubmitting(true);
-    setMsg(null);
-    try {
-      const r = await api.post('/reviews', { ...form, product_id: Number(id) });
-      setMsg({ type: 'ok', text: r.data.message || 'Thanks! Awaiting approval.' });
-      setForm({ rating: 5, comment: '' });
-    } catch (err) {
-      const status = err?.response?.status;
-      if (status === 401) {
-        setMsg({ type: 'err', text: 'Please sign in to write a review.' });
-        return;
-      }
-      const errs = err?.response?.data?.errors;
-      const first = errs ? Object.values(errs)[0]?.[0] : null;
-      setMsg({ type: 'err', text: first || err?.response?.data?.message || 'Could not submit review.' });
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   if (loading) return <div className="container mx-auto p-12 text-center text-gray-500">Loading…</div>;
   if (!product) return <div className="container mx-auto p-12 text-center text-gray-500">Product not found. <Link to="/products" className="text-brand-700">Browse all →</Link></div>;
@@ -207,7 +179,7 @@ export default function ProductDetails() {
         <h2 className="text-xl font-bold mb-4">Customer reviews</h2>
 
         {reviews.length === 0 ? (
-          <div className="text-gray-500 mb-4">No reviews yet. Be the first.</div>
+          <div className="text-gray-500 mb-4">No reviews for this product yet.</div>
         ) : (
           <ul className="space-y-3 mb-6">
             {reviews.map((r) => (
@@ -223,49 +195,6 @@ export default function ProductDetails() {
           </ul>
         )}
 
-        <form onSubmit={submitReview} className="card p-4 max-w-lg">
-          <h3 className="font-semibold mb-3">Write a review</h3>
-
-          {msg && (
-            <div className={`text-sm mb-3 p-2 rounded ${msg.type === 'ok' ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-700'}`}>
-              {msg.text}
-            </div>
-          )}
-
-          {!authed && (
-            <div className="grid sm:grid-cols-2 gap-2 mb-3">
-              <input
-                className="input"
-                type="text"
-                required
-                maxLength={120}
-                placeholder="Your name *"
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-              />
-              <input
-                className="input"
-                type="email"
-                required
-                maxLength={190}
-                placeholder="Your email *"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-              />
-            </div>
-          )}
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Rating:</span>
-            <RatingStars value={form.rating} size="lg" interactive onChange={(n) => setForm({ ...form, rating: n })} />
-          </div>
-          <textarea className="input mt-3" rows="4" placeholder="Share what you liked / didn't like *" required value={form.comment}
-                    onChange={(e) => setForm({ ...form, comment: e.target.value })} />
-          <button className="btn-primary mt-3" disabled={submitting}>
-            {submitting ? 'Submitting…' : 'Submit review'}
-          </button>
-          <p className="text-[11px] text-gray-400 mt-2">Reviews appear after admin approval.</p>
-        </form>
       </section>
 
       {/* Related products */}

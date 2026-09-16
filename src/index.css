@@ -5,16 +5,24 @@
 html, body, #root { height: 100%; }
 body { @apply bg-gray-50 text-gray-900 antialiased; }
 
-.btn {
-  @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition;
+/* These sit in @layer components on purpose. Defined as bare rules after
+   @tailwind utilities, they came LATER in the stylesheet than the utility
+   classes, so at equal specificity .input's px-3 beat a pl-9 written
+   alongside it -- which is why the search icon sat on top of the placeholder
+   on /products. Inside the layer, utilities always win, which is what every
+   `className="input pl-9"` in the app already assumes. */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium transition;
+  }
+  .btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700; }
+  .btn-secondary { @apply btn bg-white border border-gray-300 text-gray-700 hover:bg-gray-50; }
+  .input {
+    @apply w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm
+           focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500;
+  }
+  .card { @apply bg-white rounded-lg shadow-sm border border-gray-200; }
 }
-.btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700; }
-.btn-secondary { @apply btn bg-white border border-gray-300 text-gray-700 hover:bg-gray-50; }
-.input {
-  @apply w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm
-         focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500;
-}
-.card { @apply bg-white rounded-lg shadow-sm border border-gray-200; }
 
 /* ---------- Page loader (branded logo loader) ---------- */
 .page-loader {

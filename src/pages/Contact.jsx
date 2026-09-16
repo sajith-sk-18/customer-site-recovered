@@ -5,7 +5,7 @@ import Seo from '../components/Seo';
 
 export default function Contact() {
   const { authed, user } = useAuth();
-  const [form, setForm] = useState({ name: '', email: '', phone: '', message: '' });
+  const [form, setForm] = useState({ name: '', email: '', phone: '', whatsapp: '', message: '' });
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
 
@@ -16,7 +16,7 @@ export default function Contact() {
     try {
       const r = await api.post('/enquiries', form);
       setMsg({ type: 'ok', text: r.data.message || "Thanks — we'll be in touch within 24 hours." });
-      setForm({ name: '', email: '', phone: '', message: '' });
+      setForm({ name: '', email: '', phone: '', whatsapp: '', message: '' });
     } catch (err) {
       const status = err?.response?.status;
       if (status === 401) {
@@ -159,14 +159,31 @@ export default function Contact() {
               </div>
             )}
 
-            <Field label="Phone (optional)" className="mt-4">
-              <input
-                className="input"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                placeholder={user?.phone || '+91 …'}
-              />
-            </Field>
+            <div className="grid sm:grid-cols-2 gap-4 mt-4">
+              <Field label="Phone *">
+                <input
+                  className="input"
+                  type="tel"
+                  required
+                  maxLength={30}
+                  value={form.phone}
+                  onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                  placeholder={user?.phone || '+91 90000 00000'}
+                />
+              </Field>
+
+              <Field label="WhatsApp *">
+                <input
+                  className="input"
+                  type="tel"
+                  required
+                  maxLength={30}
+                  value={form.whatsapp}
+                  onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
+                  placeholder="+91 90000 00000"
+                />
+              </Field>
+            </div>
 
             <Field label="Message *" className="mt-4">
               <textarea
