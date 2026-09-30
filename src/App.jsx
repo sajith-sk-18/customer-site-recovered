@@ -4,6 +4,7 @@ import Footer from './components/Footer';
 import ScrollToTop from './components/ScrollToTop';
 import PageLoader from './components/PageLoader';
 import EnquiryFab from './components/EnquiryFab';
+import LaunchOverlay from './components/LaunchOverlay';
 import Home from './pages/Home';
 import Products from './pages/Products';
 import ProductDetails from './pages/ProductDetails';
@@ -17,6 +18,7 @@ import Cctv from './pages/Cctv';
 export default function App() {
   return (
     <div className="flex flex-col min-h-screen">
+      <LaunchOverlay />
       <PageLoader />
       <ScrollToTop />
       <Navbar />
